@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Grade Calculator</title>
+  <style>
+    :root { font-family: system-ui, Arial, sans-serif; }
+    body { margin: 0; background: #f6f7fb; }
+    .wrap { max-width: 720px; margin: 40px auto; padding: 24px; background: #fff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.06); }
+    h1 { margin: 0 0 16px; font-size: 1.6rem; }
+    p.note { color: #555; margin-top: 0; }
+    .row { display: grid; grid-template-columns: 1fr 120px 40px; gap: 10px; margin-bottom: 10px; }
+    .row input[type="text"] { padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
+    .row input[type="number"] { padding: 10px; border: 1px solid #ddd; border-radius: 10px; }
+    .row button { border: none; background: #f1f1f5; border-radius: 10px; cursor: pointer; }
+    .actions { display: flex; gap: 10px; margin: 18px 0 8px; }
+    .btn { padding: 10px 14px; border: none; border-radius: 10px; cursor: pointer; }
+    .btn.primary { background: #3b82f6; color: #fff; }
+    .btn.secondary { background: #eef2ff; color: #1e3a8a; }
+    .results { margin-top: 16px; padding: 14px; background: #f9fafb; border: 1px solid #eee; border-radius: 12px; }
+    .error { color: #b91c1c; margin-top: 6px; }
+    small.helper { color: #6b7280; display: block; margin-top: -4px; margin-bottom: 10px; }
+    .footer { margin-top: 18px; color: #777; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Student Grade Calculator</h1>
+    <p class="note">Enter subjects and marks (0–100). Add more rows as needed.</p>
+
+    <div id="rows"></div>
+    <button id="addRow" class="btn secondary" type="button">+ Add Subject</button>
+    <small class="helper">Tip: double-click a label to rename the subject.</small>
+
+    <div class="actions">
+      <button id="calc" class="btn primary" type="button">Calculate</button>
+      <button id="reset" class="btn" type="button">Reset</button>
+    </div>
+
+    <div id="error" class="error" role="alert" aria-live="polite"></div>
+
+    <div id="results" class="results" hidden>
+      <div><strong>Total Marks:</strong> <span id="total">0</span></div>
+      <div><strong>Average (%):</strong> <span id="avg">0</span></div>
+      <div><strong>Grade:</strong> <span id="grade">—</span></div>
+    </div>
+
+    <div class="footer">Grading: A (90–100), B (80–89), C (70–79), D (60–69), F (&lt;60)</div>
+  </div>
+
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const addRowBtn = document.getElementById('addRow');
+    const calcBtn = document.getElementById('calc');
+    const resetBtn = document.getElementById('reset');
+    const errorEl = document.getElementById('error');
+    const resultsEl = document.getElementById('results');
+    const totalEl = document.getElementById('total');
+    const avgEl = document.getElementById('avg');
+    const gradeEl = document.getElementById('grade');
+
+    function gradeFromAverage(avg) {
+      if (avg >= 90) return 'A';
+      if (avg >= 80) return 'B';
+      if (avg >= 70) return 'C';
+      if (avg >= 60) return 'D';
+      return 'F';
+    }
+
+    function makeRow(idx, subject = `Subject ${idx+1}`, mark = '') {
+      const row = document.createElement('div');
+      row.className = 'row';
+
+      const name = document.createElement('input');
+      name.type = 'text';
+      name.value = subject;
+      name.title = 'Subject name';
+
+      const score = document.createElement('input');
+      score.type = 'number';
+      score.min = '0';
+      score.max = '100';
+      score.step = '0.01';
+      score.placeholder = '0–100';
+      score.value = mark;
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.title = 'Remove row';
+      del.textContent = '✕';
+      del.addEventListener('click', () => row.remove());
+
+      row.append(name, score, del);
+      return row;
+    }
+
+    function addRow() {
+      rowsEl.appendChild(makeRow(rowsEl.children.length));
+    }
+
+    function resetAll() {
+      rowsEl.innerHTML = '';
+      for (let i = 0; i < 3; i++) addRow();
+      errorEl.textContent = '';
+      resultsEl.hidden = true;
+    }
+
+    function calculate() {
+      errorEl.textContent = '';
+      const scores = [];
+      [...rowsEl.querySelectorAll('.row')].forEach((r, i) => {
+        const val = r.querySelector('input[type="number"]').value.trim();
+        if (val !== '') scores.push(val);
+      });
+
+      if (scores.length === 0) {
+        errorEl.textContent = 'Please enter at least one mark.';
+        resultsEl.hidden = true;
+        return;
+      }
+
+      let total = 0;
+      for (const s of scores) {
+        const n = Number(s);
+        if (!isFinite(n) || n < 0 || n > 100) {
+          errorEl.textContent = 'Marks must be numbers between 0 and 100.';
+          resultsEl.hidden = true;
+          return;
+        }
+        total += n;
+      }
+
+      const avg = total / scores.length;
+      totalEl.textContent = total.toFixed(2).replace(/\.00$/, '');
+      avgEl.textContent = avg.toFixed(2);
+      gradeEl.textContent = gradeFromAverage(avg);
+      resultsEl.hidden = false;
+    }
+
+    addRowBtn.addEventListener('click', addRow);
+    calcBtn.addEventListener('click', calculate);
+    resetBtn.addEventListener('click', resetAll);
+
+    // Initial rows
+    resetAll();
+  </script>
+</body>
+</html>
