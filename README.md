@@ -1,6 +1,7 @@
 # student_grade_calculator.py
 
 print("=== Student Grade Calculator ===")
+it is easy to access and to do the work
 
 # Input marks for three subjects
 marks1 = float(input("Enter marks for Subject 1: "))
